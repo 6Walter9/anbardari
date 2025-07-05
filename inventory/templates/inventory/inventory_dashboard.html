@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>داشبورد انبار</title>
+    <style>
+        :root {
+            --primary-blue: #6666ff;
+            --light-blue: #b8baff;
+            --bg-blue: #c9e8ff;
+            --dark-text: #0c0c16;
+            --white: #ffffff;
+            --danger-red: #ff6b6b;
+            --warning-yellow: #ffc107;
+            --secondary-gray: #6c757d;
+            --edit-green: #28a745;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-blue);
+            color: var(--dark-text);
+            margin: 0;
+            padding: 30px;
+        }
+        .container {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 1200px;
+            margin: auto;
+        }
+        .header {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: var(--primary-blue);
+            margin: 0;
+        }
+        .header p {
+            margin: 5px 0 0;
+            color: #555;
+        }
+        .toolbar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--white);
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn-add {
+            background: linear-gradient(45deg, var(--primary-blue), var(--light-blue));
+            box-shadow: 0 4px 15px rgba(102, 102, 255, 0.3);
+        }
+        .btn-search {
+            background-color: var(--warning-yellow);
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+        .btn-delete {
+            background-color: var(--danger-red);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+        .btn-cancel {
+            background-color: var(--secondary-gray);
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+            display: none;
+        }
+        .btn-view, .btn-edit {
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+            border: 1px solid transparent;
+            color: var(--white);
+            width: 60px;
+            text-align: center;
+        }
+        .btn-view { background-color: var(--primary-blue); }
+        .btn-edit { background-color: var(--edit-green); }
+        .btn-view:disabled {
+            background-color: #ccc;
+            color: #666;
+            cursor: not-allowed;
+            border-color: #bbb;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: right;
+            border-bottom: 1px solid #ddd;
+            transition: background-color 0.3s;
+            vertical-align: middle;
+        }
+        thead th {
+            background-color: #f8f9fa;
+            color: var(--dark-text);
+        }
+        tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+        .delete-checkbox-cell,
+        .delete-checkbox {
+            display: none;
+        }
+        .delete-mode .delete-checkbox-cell,
+        .delete-mode .delete-checkbox {
+            display: table-cell;
+            width: 1%;
+        }
+        .delete-mode tbody tr {
+            cursor: pointer;
+        }
+        .row-selected {
+            background-color: var(--light-blue) !important;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 30px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 900px;
+            border-radius: 20px;
+            position: relative;
+            animation: slideIn 0.4s;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .close-btn {
+            color: #aaa;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-btn:hover,
+        .close-btn:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        .file-upload-container {
+            display: flex;
+            align-items: center;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 5px;
+        }
+        .file-upload-container input[type="file"] {
+            border: none;
+            flex: 1;
+        }
+        .upload-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+        }
+        .spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--primary-blue);
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        .checkmark {
+            color: var(--success-green);
+            font-size: 20px;
+            font-weight: bold;
+            display: none;
+        }
+        .image-preview {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-left: 10px;
+            display: none;
+        }
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            padding-top: 60px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+        .image-modal-content {
+            margin: auto;
+            display: block;
+            width: 80%;
+            max-width: 700px;
+            animation: zoomIn 0.6s;
+        }
+        @keyframes zoomIn {
+            from { transform: scale(0) }
+            to { transform: scale(1) }
+        }
+        .image-modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .image-modal-close-btn:hover {
+            color: #bbb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>داشبورد مدیریت انبار</h1>
+            <p>در این بخش می‌توانید لیست اسناد ورودی را مشاهده، ویرایش و مدیریت کنید.</p>
+        </div>
+        <div class="toolbar">
+            <button id="add-modal-btn" class="btn btn-add">افزودن سند جدید</button>
+            <button id="search-modal-btn" class="btn btn-search">جستجو و فیلتر</button>
+            <button id="delete-mode-btn" class="btn btn-delete">حذف گروهی</button>
+            <button id="cancel-delete-btn" class="btn btn-cancel">لغو</button>
+        </div>
+        <table id="main-table">
+            <thead>
+                <tr>
+                    <th class="delete-checkbox-cell"><input type="checkbox" id="select-all-checkbox"></th>
+                    <th>ردیف</th>
+                    <th>تاریخ</th>
+                    <th>شرح کالا</th>
+                    <th>مقدار</th>
+                    <th>واحد</th>
+                    <th>مبلغ کل (ریال)</th>
+                    <th>شماره فاکتور</th>
+                    <th>تعهد</th>
+                    <th>فاکتور</th>
+                    <th>رسید</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody id="entry-table-body">
+                {% include 'inventory/_entry_table_rows.html' with entries=entries %}
+            </tbody>
+        </table>
+    </div>
+
+    <div id="searchModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>جستجو و فیلتر پیشرفته</h2>
+            <form id="filter-form" class="filter-form" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="search_in">جستجو در:</label>
+                    <select id="search_in" name="search_in">
+                        <option value="all" selected>همه موارد</option>
+                        <option value="sharh">شرح کالا</option>
+                        <option value="shomare_faktor">شماره فاکتور</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="q">عبارت جستجو:</label>
+                    <input type="text" id="q" name="q" placeholder="متن مورد نظر...">
+                </div>
+                <div class="form-group">
+                    <label for="taahod">فیلتر بر اساس تعهد:</label>
+                    <select id="taahod" name="taahod">
+                        <option value="">همه</option>
+                        <option value="علوی">علوی</option>
+                        <option value="بهزادی">بهزادی</option>
+                        <option value="رحمانی">رحمانی</option>
+                        <option value="پرداختی">پرداختی</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="addEditModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2 id="modal-title">افزودن سند جدید</h2>
+            <form id="entry-form" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-grid">
+                    {% for field in add_form %}
+                        <div class="form-group {% if field.name == 'tozihat' %}full-width{% endif %}">
+                            {{ field.label_tag }}
+                            {% if field.name == 'tasvir_faktor' or field.name == 'tasvir_resid' %}
+                                <div class="file-upload-container">
+                                    <img src="" alt="پیش‌نمایش" class="image-preview" id="preview-{{ field.name }}">
+                                    {{ field }}
+                                    <div class="upload-status" id="status-{{ field.name }}">
+                                        <div class="spinner"></div>
+                                        <div class="checkmark">✓</div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                {{ field }}
+                            {% endif %}
+                            <div class="field-errors" style="color:red; font-size:12px;"></div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <button type="submit" id="modal-submit-btn" class="btn btn-add" style="margin-top: 20px;">ثبت اطلاعات</button>
+            </form>
+        </div>
+    </div>
+    
+    <div id="imageModal" class="image-modal">
+        <span class="image-modal-close-btn">&times;</span>
+        <img class="image-modal-content" id="modalImage">
+    </div>
+
+<script>
+    function openImageModal(event) {
+        event.preventDefault();
+        const imageModal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        imageModal.style.display = "block";
+        modalImg.src = event.currentTarget.href;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const tableBody = document.getElementById('entry-table-body');
+        let debounceTimer;
+
+        function setupFileInputs(container) {
+            const fileInputs = container.querySelectorAll('input[type="file"]');
+            fileInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const fileContainer = this.closest('.file-upload-container');
+                    const preview = fileContainer.querySelector('.image-preview');
+                    const statusDiv = fileContainer.querySelector('.upload-status');
+                    const spinner = statusDiv.querySelector('.spinner');
+                    const checkmark = statusDiv.querySelector('.checkmark');
+                    
+                    if (this.files && this.files[0]) {
+                        const reader = new FileReader();
+                        reader.onloadstart = () => {
+                            preview.style.display = 'none';
+                            checkmark.style.display = 'none';
+                            spinner.style.display = 'block';
+                        };
+                        reader.onload = (e) => {
+                            setTimeout(() => {
+                                spinner.style.display = 'none';
+                                preview.src = e.target.result;
+                                preview.style.display = 'block';
+                                checkmark.style.display = 'block';
+                            }, 500);
+                        };
+                        reader.readAsDataURL(this.files[0]);
+                    } else {
+                        preview.style.display = 'none';
+                        spinner.style.display = 'none';
+                        checkmark.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        // --- مودال افزودن و ویرایش ---
+        const entryModal = document.getElementById('addEditModal');
+        const entryForm = document.getElementById('entry-form');
+        const modalTitle = document.getElementById('modal-title');
+        const modalSubmitBtn = document.getElementById('modal-submit-btn');
+
+        function resetModalToAddMode() {
+            entryForm.reset();
+            entryForm.action = "{% url 'add_stock_entry' %}";
+            modalTitle.textContent = 'افزودن سند جدید';
+            modalSubmitBtn.textContent = 'ثبت اطلاعات';
+            modalSubmitBtn.className = 'btn btn-add';
+            document.querySelectorAll('.field-errors').forEach(el => el.textContent = '');
+            document.querySelectorAll('.image-preview, .checkmark, .spinner').forEach(el => el.style.display = 'none');
+        }
+
+        document.getElementById('add-modal-btn').onclick = () => {
+            resetModalToAddMode();
+            entryModal.style.display = 'block';
+        };
+        
+        setupFileInputs(entryModal);
+
+        tableBody.addEventListener('click', function(e) {
+            const editButton = e.target.closest('.btn-edit');
+            if (editButton) {
+                const entryId = editButton.dataset.id;
+                fetch(`/inventory/api/entry/${entryId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            resetModalToAddMode();
+                            const entryData = data.data;
+                            for (const key in entryData) {
+                                const field = entryForm.querySelector(`[name=${key}]`);
+                                if (field && field.type !== 'file') {
+                                    field.value = entryData[key];
+                                }
+                            }
+                            entryForm.action = `/inventory/api/entry/${entryId}/`;
+                            modalTitle.textContent = 'ویرایش سند';
+                            modalSubmitBtn.textContent = 'ذخیره تغییرات';
+                            modalSubmitBtn.className = 'btn btn-edit';
+                            entryModal.style.display = 'block';
+                        }
+                    });
+            }
+        });
+
+        entryForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const url = this.action;
+            const isEdit = url.includes('/api/entry/');
+
+            fetch(url, {
+                method: 'POST', body: formData, headers: {'X-CSRFToken': '{{ csrf_token }}'}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (isEdit) {
+                        const oldRow = document.querySelector(`tr[data-id="${data.id}"]`);
+                        if (oldRow) {
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = data.html_from_view.trim();
+                            oldRow.replaceWith(tempDiv.firstChild);
+                        }
+                    } else {
+                        tableBody.insertAdjacentHTML('afterbegin', data.html_from_view);
+                    }
+                    entryModal.style.display = 'none';
+                } else {
+                    document.querySelectorAll('.field-errors').forEach(el => el.textContent = '');
+                    Object.keys(data.errors).forEach(field => {
+                        const errorDiv = entryForm.querySelector(`[name=${field}]`).closest('.form-group').querySelector('.field-errors');
+                        if (errorDiv) errorDiv.textContent = data.errors[field][0];
+                    });
+                }
+            });
+        });
+
+        // --- مودال جستجو ---
+        const searchModal = document.getElementById('searchModal');
+        const openSearchModalBtn = document.getElementById('search-modal-btn');
+        const searchInput = document.getElementById('q');
+        const taahodSelect = document.getElementById('taahod');
+        const searchInSelect = document.getElementById('search_in');
+        openSearchModalBtn.onclick = () => searchModal.style.display = 'block';
+        
+        const fetchResults = () => {
+            const query = searchInput.value;
+            const taahod = taahodSelect.value;
+            const searchIn = searchInSelect.value;
+            const url = `{% url 'search_api' %}?q=${encodeURIComponent(query)}&taahod=${encodeURIComponent(taahod)}&search_in=${encodeURIComponent(searchIn)}`;
+            fetch(url).then(response => response.json()).then(data => { tableBody.innerHTML = data.html_from_view; });
+        };
+        searchInput.addEventListener('input', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(fetchResults, 300); });
+        taahodSelect.addEventListener('change', fetchResults);
+        searchInSelect.addEventListener('change', fetchResults);
+
+        // --- حذف گروهی ---
+        const table = document.getElementById('main-table');
+        const deleteModeBtn = document.getElementById('delete-mode-btn');
+        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+        const selectAllCheckbox = document.getElementById('select-all-checkbox');
+        const enterDeleteMode = () => { table.classList.add('delete-mode'); cancelDeleteBtn.style.display = 'inline-block'; deleteModeBtn.textContent = 'تایید حذف'; };
+        const exitDeleteMode = () => { table.classList.remove('delete-mode'); cancelDeleteBtn.style.display = 'none'; deleteModeBtn.textContent = 'حذف گروهی'; document.querySelectorAll('.delete-checkbox:checked').forEach(cb => cb.checked = false); document.querySelectorAll('.row-selected').forEach(row => row.classList.remove('row-selected')); if(selectAllCheckbox) selectAllCheckbox.checked = false; };
+        
+        deleteModeBtn.addEventListener('click', () => {
+            if (!table.classList.contains('delete-mode')) { enterDeleteMode(); } else {
+                const selectedIds = Array.from(document.querySelectorAll('.delete-checkbox:checked')).map(cb => cb.dataset.id);
+                if (selectedIds.length === 0) { alert('لطفا حداقل یک آیتم را برای حذف انتخاب کنید.'); return; }
+                if (confirm(`آیا از حذف ${selectedIds.length} آیتم انتخابی مطمئن هستید؟`)) {
+                    fetch("{% url 'delete_api' %}", { method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'}, body: JSON.stringify({ ids: selectedIds })})
+                    .then(response => response.json()).then(data => {
+                        if (data.status === 'success') {
+                            alert(data.message);
+                            selectedIds.forEach(id => { document.querySelector(`tr[data-id="${id}"]`).remove(); });
+                            exitDeleteMode();
+                        } else { alert('خطا در حذف: ' + data.message); }
+                    });
+                }
+            }
+        });
+        cancelDeleteBtn.addEventListener('click', exitDeleteMode);
+        selectAllCheckbox.addEventListener('change', (e) => { document.querySelectorAll('.delete-checkbox').forEach(cb => { cb.checked = e.target.checked; cb.closest('tr').classList.toggle('row-selected', e.target.checked); }); });
+        tableBody.addEventListener('click', (e) => { if (table.classList.contains('delete-mode') && e.target.tagName !== 'INPUT') { const row = e.target.closest('tr'); const checkbox = row.querySelector('.delete-checkbox'); if (checkbox) { checkbox.checked = !checkbox.checked; row.classList.toggle('row-selected', checkbox.checked); } } });
+
+        // --- بستن مودال‌ها ---
+        const imageModal = document.getElementById('imageModal');
+        const closeButtons = document.querySelectorAll('.close-btn');
+        closeButtons.forEach(btn => {
+            btn.onclick = function() {
+                btn.closest('.modal').style.display = 'none';
+            }
+        });
+        const imageModalCloseBtn = imageModal.querySelector('.image-modal-close-btn');
+        function closeImageModal() { imageModal.style.display = "none"; }
+        imageModalCloseBtn.onclick = closeImageModal;
+        
+        window.onclick = (event) => {
+            if (event.target == entryModal || event.target == searchModal || event.target == imageModal) {
+                event.target.style.display = 'none';
+            }
+        };
+    });
+</script>
+</body>
+</html>

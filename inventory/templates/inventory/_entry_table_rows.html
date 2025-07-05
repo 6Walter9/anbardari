@@ -1,0 +1,34 @@
+{% for entry in entries %}
+<tr data-id="{{ entry.id }}">
+    <td class="delete-checkbox-cell"><input type="checkbox" class="delete-checkbox" data-id="{{ entry.id }}"></td>
+    <td>{{ forloop.counter }}</td>
+    <td>{{ entry.tarikh }}</td>
+    <td>{{ entry.sharh }}</td>
+    <td>{{ entry.meghdar }}</td>
+    <td>{{ entry.vahed }}</td>
+    <td>{{ entry.mablagh|floatformat:0 }}</td>
+    <td>{{ entry.shomare_faktor|default:"-" }}</td>
+    <td>{{ entry.taahod }}</td>
+    <td>
+        {% if entry.tasvir_faktor %}
+            <a href="{{ entry.tasvir_faktor.url }}" onclick="openImageModal(event)" class="btn-view">مشاهده</a>
+        {% else %}
+            <button class="btn-view" disabled>ندارد</button>
+        {% endif %}
+    </td>
+    <td>
+        {% if entry.tasvir_resid %}
+            <a href="{{ entry.tasvir_resid.url }}" onclick="openImageModal(event)" class="btn-view">مشاهده</a>
+        {% else %}
+            <button class="btn-view" disabled>ندارد</button>
+        {% endif %}
+    </td>
+    <td>
+        <button class="btn-edit" data-id="{{ entry.id }}">ویرایش</button>
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="12" style="text-align: center; padding: 30px;">هیچ موردی یافت نشد.</td>
+</tr>
+{% endfor %}
